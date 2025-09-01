@@ -1,0 +1,16 @@
+[
+    {    
+        "data_type": "discrete",
+        "statistic": "mean",
+        "dependency": "independent",
+        "test_name": "welch_ttest",
+        "custom_config_required": false
+    },
+    {
+        "data_type": "binary_agg",
+        "statistic": "mean",
+        "dependency": "independent",
+        "test_name": "welch_ttest",
+        "custom_config_required": false
+    }
+]
