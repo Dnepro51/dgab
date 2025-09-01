@@ -5,3 +5,8 @@ examples/anova_discrete_multiple.py
 examples/multiple_groups_proportion_test.py
 examples/welch_t_test_discrete_data.py
 examples/z_prop_test.py
+plan.md
+examples/create_binary_agg_2groups.py
+examples/create_binary_agg_multiple.py
+examples/create_discrete_2groups.py
+examples/create_discrete_multiple.py
