@@ -30,7 +30,14 @@ def get_test_config(data_type, unique_grps_cnt, statistic, dependency):
     
     return candidate_config
 
-def analyze(dataframe, data_type, group_col, metric_col, statistic='mean', dependency='independent'):
+def analyze(
+        dataframe, 
+        ata_type, 
+        group_col, 
+        metric_col, 
+        statistic='mean', 
+        dependency='independent',
+        significance_level=0.01):
     """
     Main analyze function for A/B testing.
     Now gets the correct test configuration from JSON with FULL MATCH.
