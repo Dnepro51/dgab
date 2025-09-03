@@ -32,7 +32,7 @@ def get_test_config(data_type, unique_grps_cnt, statistic, dependency):
 
 def analyze(
         dataframe, 
-        ata_type, 
+        data_type, 
         group_col, 
         metric_col, 
         statistic='mean', 
@@ -51,6 +51,7 @@ def analyze(
         'dependency': dependency,
         'group_col': group_col,
         'metric_col': metric_col,
+        'significance_level': significance_level,
         'dataframe_shape': dataframe.shape,
         'unique_grps_cnt': unique_grps_cnt,
         'test_config': test_config
