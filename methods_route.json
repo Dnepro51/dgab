@@ -1,38 +1,64 @@
 {
     "discrete": {
         "2": {
-            "statistic": "mean",
-            "dependency": "independent",
-            "test_name": "welch_ttest",
-            "omnibus_test": null,
-            "multiple_comparison_correction": null,
-            "custom_config_required": false
+            "mean": {
+                "independent": {
+                    "test_name": "welch_ttest",
+                    "omnibus_test": null,
+                    "multiple_comparison_correction": null,
+                    "custom_config_required": false,
+                    "confint_method": "welch_ci",
+                    "confint_params": {
+                        "use_t": true,
+                        "equal_var": false
+                    }
+                }
+            }
         },
         "multiple": {
-            "statistic": "mean", 
-            "dependency": "independent",
-            "test_name": "welch_ttest",
-            "omnibus_test": "anova",
-            "multiple_comparison_correction": "bonferroni",
-            "custom_config_required": false
+            "mean": {
+                "independent": {
+                    "test_name": "welch_ttest",
+                    "omnibus_test": "anova",
+                    "multiple_comparison_correction": "bonferroni",
+                    "custom_config_required": false,
+                    "confint_method": "welch_ci",
+                    "confint_params": {
+                        "use_t": true,
+                        "equal_var": false
+                    }
+                }
+            }
         }
     },
     "binary_agg": {
         "2": {
-            "statistic": "mean",
-            "dependency": "independent", 
-            "test_name": "welch_ttest",
-            "omnibus_test": null,
-            "multiple_comparison_correction": null,
-            "custom_config_required": true
+            "mean": {
+                "independent": {
+                    "test_name": "welch_ttest",
+                    "omnibus_test": null,
+                    "multiple_comparison_correction": null,
+                    "custom_config_required": true,
+                    "confint_method": "proportion_confint",
+                    "confint_params": {
+                        "method": "wilson"
+                    }
+                }
+            }
         },
         "multiple": {
-            "statistic": "mean",
-            "dependency": "independent",
-            "test_name": "welch_ttest", 
-            "omnibus_test": "chi2",
-            "multiple_comparison_correction": "bonferroni",
-            "custom_config_required": true
+            "mean": {
+                "independent": {
+                    "test_name": "welch_ttest",
+                    "omnibus_test": "chi2",
+                    "multiple_comparison_correction": "bonferroni",
+                    "custom_config_required": true,
+                    "confint_method": "proportion_confint",
+                    "confint_params": {
+                        "method": "wilson"
+                    }
+                }
+            }
         }
     }
 }
