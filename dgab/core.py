@@ -6,7 +6,6 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from .utils.confints import confint_group_statistic, confint_difference
 from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
-from .utils.results import create_comprehensive_results
 
 
 # Утилиты для определения конфигурации теста
@@ -142,38 +141,72 @@ def run_statistical_test(
     test_func = globals()[test_config['test_name']]
     correction_method = test_config['multiple_comparison_correction']
     
-    if len(groups) == 2:
-        group1_data = dataframe[dataframe[group_col] == groups[0]][metric_col]
-        group2_data = dataframe[dataframe[group_col] == groups[1]][metric_col]
-        
-        result = test_func(group1_data, group2_data, significance_level)
-        
-        print(f"Тест: {test_config['test_name']}")
-        print(f"Статистика: {result['statistic']:.4f}")
-        print(f"P-value: {result['pvalue']:.6f}")
-        print(f"Значимый: {'Да' if result['significant'] else 'Нет'}")
-        print()
-    else:
-        pairwise_df = pairwise_tests_with_correction(
-            dataframe, group_col, metric_col, test_func,
-            correction_method, significance_level
-        )
-        
-        print("Попарные сравнения:")
-        display(pairwise_df)
-        print()
-    
-    confint_method = test_config['confint_method']['difference']
-    confint_params = test_config['confint_params']['difference']
+    group_stats_df = confint_group_statistic(
+        dataframe, group_col, metric_col, data_type, statistic,
+        test_config['confint_method']['statistic_value'],
+        test_config['confint_params']['statistic_value'],
+        significance_level
+    )
     
     diff_df = confint_difference(
         dataframe, group_col, metric_col, data_type, statistic,
-        confint_method, confint_params, significance_level
+        test_config['confint_method']['difference'],
+        test_config['confint_params']['difference'],
+        significance_level
     )
     
+    pairwise_df = pairwise_tests_with_correction(
+        dataframe, group_col, metric_col, test_func,
+        correction_method, significance_level
+    )
+    
+    print("Попарные сравнения:")
+    display(pairwise_df)
+    print()
+    
+    results = []
+    for i, row in pairwise_df.iterrows():
+        group1, group2 = row['group1'], row['group2']
+        
+        group1_stats = group_stats_df[group_stats_df['group'] == group1].iloc[0]
+        group2_stats = group_stats_df[group_stats_df['group'] == group2].iloc[0]
+        diff_row = diff_df[(diff_df['group1'] == group1) & (diff_df['group2'] == group2)]
+        
+        if len(diff_row) == 0:
+            diff_row = diff_df[(diff_df['group1'] == group2) & (diff_df['group2'] == group1)]
+            difference = -diff_row.iloc[0]['difference'] if len(diff_row) > 0 else 0
+        else:
+            difference = diff_row.iloc[0]['difference']
+        
+        abs_difference = abs(difference)
+        comparison_result = f"{group1}>{group2}" if group1_stats[statistic] > group2_stats[statistic] else f"{group2}>{group1}"
+        
+        diff_ci = diff_row.iloc[0]['ci'] if len(diff_row) > 0 else [0, 0]
+        abs_diff_ci = [abs(diff_ci[0]), abs(diff_ci[1])]
+        abs_diff_ci.sort()
+        
+        results.append({
+            'group1': group1,
+            'group1_count': group1_stats['count'],
+            f'group1_{statistic}': np.around(group1_stats[statistic], 4),
+            'group1_ci': group1_stats['ci'],
+            'group2': group2,
+            'group2_count': group2_stats['count'],
+            f'group2_{statistic}': np.around(group2_stats[statistic], 4),
+            'group2_ci': group2_stats['ci'],
+            'abs_difference': np.around(abs_difference, 4),
+            'abs_difference_ci': [np.around(abs_diff_ci[0], 4), np.around(abs_diff_ci[1], 4)],
+            'comparison_result': comparison_result,
+            'pvalue': row.get('pvalue', 0),
+            'corrected_pvalue': row.get('corrected_pvalue', None),
+            'significant': row.get('significant', False)
+        })
+    
+    comprehensive_results = pd.DataFrame(results)
+    
     confidence_level = 1 - significance_level
-    print(f"Доверительные интервалы для разностей {statistic}: {confidence_level}")
-    display(diff_df)
+    print(f"Сводная таблица результатов. Доверительные интервалы: {confidence_level}")
+    display(comprehensive_results)
     print()
 
 

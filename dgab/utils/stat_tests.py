@@ -52,7 +52,9 @@ def pairwise_tests_with_correction(dataframe, group_col, metric_col, test_func,
             
             results.append({
                 'group1': groups[i],
+                'group1_count': len(group1_data),
                 'group2': groups[j],
+                'group2_count': len(group2_data),
                 'statistic': test_result['statistic'],
                 'pvalue': test_result['pvalue']
             })
@@ -63,5 +65,8 @@ def pairwise_tests_with_correction(dataframe, group_col, metric_col, test_func,
         for i, result in enumerate(results):
             result['corrected_pvalue'] = corrected_pvalues[i]
             result['significant'] = corrected_pvalues[i] < significance_level
+    else:
+        for result in results:
+            result['significant'] = result['pvalue'] < significance_level
     
     return pd.DataFrame(results)

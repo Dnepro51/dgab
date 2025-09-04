@@ -44,6 +44,7 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
         
         results.append({
             'group': group,
+            'count': len(group_data),
             statistic: stat_value,
             'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
         })
