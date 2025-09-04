@@ -69,14 +69,7 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
     print(f"Доверительный интервал для differences: {confint_method_ru.get(difference_method, difference_method)}")
 
 
-## EDA-2 Сбор доверительных интервалов по методам из @methods_route.json
 
-def statistic_confint_display(df, group_col, metric_col, data_type, statistic):
-    
-    
-
-
-    pass
 
 
 def run_eda_analysis(
