@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import statsmodels.stats.api as sms
+from .utils.confints import confint_group_statistic
 
 
 # Утилиты для определения конфигурации теста
@@ -33,12 +34,15 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
     correction_ru = {'bonferroni': 'Бонферрони', None: 'нет'}
     dependency_ru = {'independent': 'независимые', 'dependent': 'зависимые'}
     confint_method_ru = {
-        'welch_ci': 'доверительный интервал для среднего',
-        'proportion_confint': 'доверительный интервал для пропорций',
+        't_ci': 'T-распределение',
+        'welch_ci': 'Уэлча',
+        'wilson_ci': 'Уилсона',
+        'newcombe_wilson_ci': 'Ньюкомба-Уилсона',
         None: 'нет'
     }
     
     print(f"Тип данных: {data_type_ru.get(data_type, data_type)}")
+    print(f"Статистика: {statistic}")
     print(f"Групп: {unique_grps_cnt}")
     print(f"Значимость: {significance_level}")
     print(f"Зависимость выборок: {dependency_ru.get(dependency, dependency)}")
@@ -55,9 +59,13 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
             print(f"Общий тест: {test_name_ru.get(test_config['omnibus_test'], test_config['omnibus_test'])}")
             print(f"Тесты для попарных сравнений: {test_name_ru.get(test_config['test_name'], test_config['test_name'])}")
         print(f"Коррекция: {correction_ru.get(test_config['multiple_comparison_correction'])}")
-    # Добавляем вывод метода доверительного интервала
-    confint_method = test_config.get('confint_method', None)
-    print(f"Метод доверительного интервала: {confint_method_ru.get(confint_method, confint_method)}")
+    # Добавляем вывод методов доверительных интервалов
+    confint_methods = test_config.get('confint_method', {})
+    statistic_method = confint_methods.get('statistic_value')
+    difference_method = confint_methods.get('difference')
+    
+    print(f"Доверительный интервал для {statistic}: {confint_method_ru.get(statistic_method, statistic_method)}")
+    print(f"Доверительный интервал для differences: {confint_method_ru.get(difference_method, difference_method)}")
 
 
 ## EDA-2 Сбор доверительных интервалов по методам из @methods_route.json
@@ -82,6 +90,19 @@ def run_eda_analysis(
         dependency
     ):
     display_test_info(data_type, unique_grps_cnt, test_config, significance_level, dataframe, group_col, metric_col, statistic, dependency)
+    print()
+    
+    confint_method = test_config['confint_method']['statistic_value']
+    confint_params = test_config['confint_params']['statistic_value']
+    
+    group_stats_df = confint_group_statistic(
+        dataframe, group_col, metric_col, data_type, statistic,
+        confint_method, confint_params, significance_level
+    )
+    
+    confidence_level = 1 - significance_level
+    print(f"Статистика по группам. Доверительный интервал для {statistic}: {confidence_level}")
+    display(group_stats_df)
     print()
 
 
