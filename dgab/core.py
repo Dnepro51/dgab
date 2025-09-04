@@ -4,7 +4,9 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import statsmodels.stats.api as sms
-from .utils.confints import confint_group_statistic
+from .utils.confints import confint_group_statistic, confint_difference
+from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
+from .utils.results import create_comprehensive_results
 
 
 # Утилиты для определения конфигурации теста
@@ -116,10 +118,63 @@ def run_statistical_test(
         group_col, 
         metric_col, 
         unique_grps_cnt, 
-        significance_level
+        significance_level,
+        data_type,
+        statistic
     ):
     """Route to appropriate statistical test based on test_config."""
-    pass
+    print("Результаты статистических тестов:")
+    print()
+    
+    groups = sorted(dataframe[group_col].unique())
+    
+    omnibus_test = test_config['omnibus_test']
+    if omnibus_test:
+        omnibus_func = globals()[f"{omnibus_test}_test"]
+        omnibus_result = omnibus_func(dataframe, group_col, metric_col, significance_level)
+        
+        print(f"Общий тест: {omnibus_test}")
+        print(f"Статистика: {omnibus_result['statistic']:.4f}")
+        print(f"P-value: {omnibus_result['pvalue']:.6f}")
+        print(f"Значимый: {'Да' if omnibus_result['significant'] else 'Нет'}")
+        print()
+    
+    test_func = globals()[test_config['test_name']]
+    correction_method = test_config['multiple_comparison_correction']
+    
+    if len(groups) == 2:
+        group1_data = dataframe[dataframe[group_col] == groups[0]][metric_col]
+        group2_data = dataframe[dataframe[group_col] == groups[1]][metric_col]
+        
+        result = test_func(group1_data, group2_data, significance_level)
+        
+        print(f"Тест: {test_config['test_name']}")
+        print(f"Статистика: {result['statistic']:.4f}")
+        print(f"P-value: {result['pvalue']:.6f}")
+        print(f"Значимый: {'Да' if result['significant'] else 'Нет'}")
+        print()
+    else:
+        pairwise_df = pairwise_tests_with_correction(
+            dataframe, group_col, metric_col, test_func,
+            correction_method, significance_level
+        )
+        
+        print("Попарные сравнения:")
+        display(pairwise_df)
+        print()
+    
+    confint_method = test_config['confint_method']['difference']
+    confint_params = test_config['confint_params']['difference']
+    
+    diff_df = confint_difference(
+        dataframe, group_col, metric_col, data_type, statistic,
+        confint_method, confint_params, significance_level
+    )
+    
+    confidence_level = 1 - significance_level
+    print(f"Доверительные интервалы для разностей {statistic}: {confidence_level}")
+    display(diff_df)
+    print()
 
 
 # Функция запуска анализа
@@ -137,6 +192,8 @@ def analyze(
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     
     run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
+    
+    run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
     
     return {
         'unique_grps_cnt': unique_grps_cnt,
