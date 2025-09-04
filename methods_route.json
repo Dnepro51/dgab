@@ -7,10 +7,18 @@
                     "omnibus_test": null,
                     "multiple_comparison_correction": null,
                     "custom_config_required": false,
-                    "confint_method": "welch_ci",
+                    "confint_method": {
+                        "statistic_value": "t_ci",
+                        "difference": "welch_ci"
+                    },
                     "confint_params": {
-                        "use_t": true,
-                        "equal_var": false
+                        "statistic_value": {
+                            "use_t": true
+                        },
+                        "difference": {
+                            "use_t": true,
+                            "equal_var": false
+                        }
                     }
                 }
             }
@@ -22,10 +30,18 @@
                     "omnibus_test": "anova",
                     "multiple_comparison_correction": "bonferroni",
                     "custom_config_required": false,
-                    "confint_method": "welch_ci",
+                    "confint_method": {
+                        "statistic_value": "t_ci",
+                        "difference": "welch_ci"
+                    },
                     "confint_params": {
-                        "use_t": true,
-                        "equal_var": false
+                        "statistic_value": {
+                            "use_t": true
+                        },
+                        "difference": {
+                            "use_t": true,
+                            "equal_var": false
+                        }
                     }
                 }
             }
@@ -39,9 +55,18 @@
                     "omnibus_test": null,
                     "multiple_comparison_correction": null,
                     "custom_config_required": true,
-                    "confint_method": "proportion_confint",
+                    "confint_method": {
+                        "statistic_value": "wilson_ci",
+                        "difference": "newcombe_wilson_ci"
+                    },
                     "confint_params": {
-                        "method": "wilson"
+                        "statistic_value": {
+                            "method": "wilson"
+                        },
+                        "difference": {
+                            "method": "newcombe",
+                            "correction": false
+                        }
                     }
                 }
             }
@@ -53,9 +78,18 @@
                     "omnibus_test": "chi2",
                     "multiple_comparison_correction": "bonferroni",
                     "custom_config_required": true,
-                    "confint_method": "proportion_confint",
+                    "confint_method": {
+                        "statistic_value": "wilson_ci",
+                        "difference": "newcombe_wilson_ci"
+                    },
                     "confint_params": {
-                        "method": "wilson"
+                        "statistic_value": {
+                            "method": "wilson"
+                        },
+                        "difference": {
+                            "method": "newcombe",
+                            "correction": false
+                        }
                     }
                 }
             }

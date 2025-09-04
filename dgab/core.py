@@ -33,7 +33,7 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
     correction_ru = {'bonferroni': 'Бонферрони', None: 'нет'}
     dependency_ru = {'independent': 'независимые', 'dependent': 'зависимые'}
     confint_method_ru = {
-        'welch_ci': 'доверительный интервал для разности средних (Уэлч)',
+        'welch_ci': 'доверительный интервал для среднего',
         'proportion_confint': 'доверительный интервал для пропорций',
         None: 'нет'
     }
