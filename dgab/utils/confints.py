@@ -54,4 +54,48 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
 def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
                       confint_method, confint_params, significance_level=0.01):
     """Calculate confidence intervals for differences between groups."""
-    pass
+    method_func = globals()[confint_method]
+    groups = sorted(dataframe[group_col].unique())
+    results = []
+    
+    if len(groups) == 2:
+        group1, group2 = groups
+        group1_data = dataframe[dataframe[group_col] == group1][metric_col]
+        group2_data = dataframe[dataframe[group_col] == group2][metric_col]
+        
+        if statistic == 'mean':
+            difference = group2_data.mean() - group1_data.mean()
+        
+        ci_lower, ci_upper = method_func(group1_data, group2_data, 
+                                       significance_level=significance_level, 
+                                       **confint_params)
+        
+        results.append({
+            'group1': group1,
+            'group2': group2,
+            'difference': difference,
+            'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
+        })
+    
+    else:
+        for i in range(len(groups)):
+            for j in range(i+1, len(groups)):
+                group1, group2 = groups[i], groups[j]
+                group1_data = dataframe[dataframe[group_col] == group1][metric_col]
+                group2_data = dataframe[dataframe[group_col] == group2][metric_col]
+                
+                if statistic == 'mean':
+                    difference = group2_data.mean() - group1_data.mean()
+                
+                ci_lower, ci_upper = method_func(group1_data, group2_data,
+                                               significance_level=significance_level,
+                                               **confint_params)
+                
+                results.append({
+                    'group1': group1,
+                    'group2': group2,
+                    'difference': difference,
+                    'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
+                })
+    
+    return pd.DataFrame(results)
