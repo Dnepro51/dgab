@@ -43,10 +43,13 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
         None: 'нет'
     }
     
+    confidence_level = 1 - significance_level
+    
     print(f"Тип данных: {data_type_ru.get(data_type, data_type)}")
     print(f"Статистика: {statistic}")
     print(f"Групп: {unique_grps_cnt}")
     print(f"Значимость: {significance_level}")
+    print(f"Доверительная вероятность: {confidence_level}")
     print(f"Зависимость выборок: {dependency_ru.get(dependency, dependency)}")
     print(f"Колонка с идентификатором групп: {group_col}")
     print(f"Колонка с метрикой: {metric_col}")
@@ -95,8 +98,7 @@ def run_eda_analysis(
         confint_method, confint_params, significance_level
     )
     
-    confidence_level = 1 - significance_level
-    print(f"Статистика по группам. Доверительный интервал для {statistic}: {confidence_level}")
+    print("Статистика по группам:")
     display(group_stats_df)
     print()
     
@@ -182,7 +184,9 @@ def run_statistical_test(
         abs_difference = abs(difference)
         comparison_result = f"{group1}>{group2}" if group1_stats[statistic] > group2_stats[statistic] else f"{group2}>{group1}"
         
-        diff_ci = diff_row.iloc[0]['ci'] if len(diff_row) > 0 else [0, 0]
+        confidence_level_int = int((1 - significance_level) * 100)
+        ci_col = f'ci_{confidence_level_int}'
+        diff_ci = diff_row.iloc[0][ci_col] if len(diff_row) > 0 else [0, 0]
         abs_diff_ci = [abs(diff_ci[0]), abs(diff_ci[1])]
         abs_diff_ci.sort()
         
@@ -190,13 +194,13 @@ def run_statistical_test(
             'group1': group1,
             'group1_count': group1_stats['count'],
             f'group1_{statistic}': np.around(group1_stats[statistic], 4),
-            'group1_ci': group1_stats['ci'],
+            f'group1_{ci_col}': group1_stats[ci_col],
             'group2': group2,
             'group2_count': group2_stats['count'],
             f'group2_{statistic}': np.around(group2_stats[statistic], 4),
-            'group2_ci': group2_stats['ci'],
+            f'group2_{ci_col}': group2_stats[ci_col],
             'abs_difference': np.around(abs_difference, 4),
-            'abs_difference_ci': [np.around(abs_diff_ci[0], 4), np.around(abs_diff_ci[1], 4)],
+            f'abs_difference_{ci_col}': [np.around(abs_diff_ci[0], 4), np.around(abs_diff_ci[1], 4)],
             'comparison_result': comparison_result,
             'pvalue': row.get('pvalue', 0),
             'corrected_pvalue': row.get('corrected_pvalue', None),
@@ -205,8 +209,7 @@ def run_statistical_test(
     
     comprehensive_results = pd.DataFrame(results)
     
-    confidence_level = 1 - significance_level
-    print(f"Сводная таблица результатов. Доверительные интервалы: {confidence_level}")
+    print("Сводная таблица результатов:")
     display(comprehensive_results)
     print()
 

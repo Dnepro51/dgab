@@ -34,6 +34,9 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
     method_func = globals()[confint_method]
     results = []
     
+    confidence_level = int((1 - significance_level) * 100)
+    ci_column_name = f'ci_{confidence_level}'
+    
     for group in dataframe[group_col].unique():
         group_data = dataframe[dataframe[group_col] == group][metric_col]
         
@@ -46,7 +49,7 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
             'group': group,
             'count': len(group_data),
             statistic: stat_value,
-            'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
+            ci_column_name: [np.around(ci_lower, 4), np.around(ci_upper, 4)]
         })
     
     return pd.DataFrame(results)
@@ -58,6 +61,9 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
     method_func = globals()[confint_method]
     groups = sorted(dataframe[group_col].unique())
     results = []
+    
+    confidence_level = int((1 - significance_level) * 100)
+    ci_column_name = f'ci_{confidence_level}'
     
     if len(groups) == 2:
         group1, group2 = groups
@@ -75,7 +81,7 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
             'group1': group1,
             'group2': group2,
             'difference': difference,
-            'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
+            ci_column_name: [np.around(ci_lower, 4), np.around(ci_upper, 4)]
         })
     
     else:
@@ -96,7 +102,7 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
                     'group1': group1,
                     'group2': group2,
                     'difference': difference,
-                    'ci': [np.around(ci_lower, 4), np.around(ci_upper, 4)]
+                    ci_column_name: [np.around(ci_lower, 4), np.around(ci_upper, 4)]
                 })
     
     return pd.DataFrame(results)
