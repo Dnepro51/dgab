@@ -6,3 +6,6 @@ examples/welch_t_test_discrete_data.py
 examples/z_prop_test.py
 plan.md
 *pycache*
+
+# DGAB Library Architecture Documentation
+library_architecture.md
