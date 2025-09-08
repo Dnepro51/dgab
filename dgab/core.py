@@ -223,6 +223,62 @@ def run_statistical_test(
 
 # Функция запуска анализа
 
+def how(data_type=None):
+    """Show how to prepare data and use analyze() function for specific data_type."""
+    json_path = os.path.join(os.path.dirname(__file__), '..', 'methods_route.json')
+    with open(json_path, 'r') as f:
+        methods_route = json.load(f)
+    
+    implemented_types = ['discrete']
+    available_types = [dt for dt in methods_route.keys() if dt in implemented_types]
+    
+    if data_type is None:
+        raise ValueError(f"Укажите data_type. Доступные типы: {available_types}. dgab.how(data_type='discrete')")
+    
+    if data_type not in available_types:
+        raise ValueError(f"Неизвестный data_type: {data_type}. Доступные: {available_types}")
+    
+    examples_path = os.path.join(os.path.dirname(__file__), 'data_examples.json')
+    with open(examples_path, 'r') as f:
+        examples = json.load(f)
+    
+    example_data = examples[data_type]
+    
+    print(f"Тип данных: {data_type}")
+    print(f"Описание: {example_data['description']}")
+    print()
+    print("Пример данных (10 строк):")
+    
+    sample_df = pd.DataFrame(example_data['sample_data'])
+    display(sample_df)
+    print()
+    
+    print("Описание полей:")
+    for field, desc in example_data['field_descriptions'].items():
+        print(f"- {field}: {desc}")
+    print()
+    
+    print("Параметры функции analyze():")
+    for param, info in example_data['parameters'].items():
+        required_text = "обязательно" if info['required'] else "опционально"
+        default_text = f", по умолчанию: {info['default']}" if info['default'] is not None else ""
+        available_text = f", доступные значения: {info['available_values']}" if info['available_values'] is not None else ""
+        
+        print(f"- {param} ({info['type']}, {required_text}{default_text}{available_text})")
+        print(f"  {info['description']}")
+    print()
+    
+    print("Пример вызова analyze():")
+    call_params = example_data['example_call']
+    print("dgab.analyze(")
+    for param, value in call_params.items():
+        if isinstance(value, str) and param != 'dataframe':
+            print(f"    {param}='{value}',")
+        else:
+            print(f"    {param}={value},")
+    print(")")
+
+
 def analyze(
         dataframe, 
         data_type, 
