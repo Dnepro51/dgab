@@ -97,6 +97,7 @@ def run_eda_analysis(
         dataframe, group_col, metric_col, data_type, statistic,
         confint_method, confint_params, significance_level
     )
+    group_stats_df = group_stats_df.sort_values(statistic, ascending=False)
     
     print("Статистика по группам:")
     display(group_stats_df)
@@ -208,6 +209,7 @@ def run_statistical_test(
         })
     
     comprehensive_results = pd.DataFrame(results)
+    comprehensive_results = comprehensive_results.sort_values(['significant', f'group1_{statistic}', 'abs_difference'], ascending=[False, False, True])
     
     print("Сводная таблица результатов:")
     display(comprehensive_results)

@@ -20,6 +20,7 @@ def plot_discrete(dataframe, group_col, metric_col, bins=None):
         histogram_kwargs = {
             'x': group_data,
             'name': f'Группа {group}',
+            'legendgroup': f'group_{group}',
             'histnorm': 'probability',
             'marker_color': colors[i],
             'opacity': 0.35,
@@ -42,6 +43,7 @@ def plot_discrete(dataframe, group_col, metric_col, bins=None):
         fig.add_trace(go.Box(
             x=group_data,
             name=f'Группа {group}',
+            legendgroup=f'group_{group}',
             marker_color=colors[idx],
             opacity=0.35,
             showlegend=False,
