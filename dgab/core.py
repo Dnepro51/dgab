@@ -4,9 +4,11 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 import statsmodels.stats.api as sms
+from IPython.display import HTML
 from .utils.confints import confint_group_statistic, confint_difference
 from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
 from .utils.visualizations import plot_discrete
+from .utils.reports import generate_html_report
 
 
 # Утилиты для определения конфигурации теста
@@ -215,6 +217,8 @@ def run_statistical_test(
     print(f"Сортировка: significant desc, group1_{statistic} desc, abs_difference asc")
     display(comprehensive_results)
     print()
+    
+    return group_stats_df, comprehensive_results
 
 
 # Функция запуска анализа
@@ -233,10 +237,14 @@ def analyze(
     
     fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
     
-    run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
+    group_stats_df, comprehensive_results = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
+    
+    html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level)
+    display(HTML(html_report))
     
     return {
         'unique_grps_cnt': unique_grps_cnt,
         'test_config': test_config,
-        'visualization': fig
+        'visualization': fig,
+        'html_report': html_report
     }
