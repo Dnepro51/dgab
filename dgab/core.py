@@ -212,6 +212,7 @@ def run_statistical_test(
     comprehensive_results = comprehensive_results.sort_values(['significant', f'group1_{statistic}', 'abs_difference'], ascending=[False, False, True])
     
     print("Сводная таблица результатов:")
+    print(f"Сортировка: significant desc, group1_{statistic} desc, abs_difference asc")
     display(comprehensive_results)
     print()
 
