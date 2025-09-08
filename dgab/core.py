@@ -6,6 +6,7 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from .utils.confints import confint_group_statistic, confint_difference
 from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
+from .utils.visualizations import plot_discrete
 
 
 # Утилиты для определения конфигурации теста
@@ -98,6 +99,13 @@ def run_eda_analysis(
     print(f"Статистика по группам. Доверительный интервал для {statistic}: {confidence_level}")
     display(group_stats_df)
     print()
+    
+    viz_function = globals()[test_config['visualization_function']]
+    fig = viz_function(dataframe, group_col, metric_col)
+    fig.show()
+    print()
+    
+    return fig
 
 
 
@@ -217,11 +225,12 @@ def analyze(
     unique_grps_cnt = count_groups(dataframe, group_col)
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     
-    run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
+    fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
     
     run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
     
     return {
         'unique_grps_cnt': unique_grps_cnt,
-        'test_config': test_config
+        'test_config': test_config,
+        'visualization': fig
     }

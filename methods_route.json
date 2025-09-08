@@ -7,6 +7,7 @@
                     "omnibus_test": null,
                     "multiple_comparison_correction": null,
                     "custom_config_required": false,
+                    "visualization_function": "plot_discrete",
                     "confint_method": {
                         "statistic_value": "t_ci",
                         "difference": "welch_ci"
@@ -30,6 +31,7 @@
                     "omnibus_test": "anova",
                     "multiple_comparison_correction": "bonferroni",
                     "custom_config_required": false,
+                    "visualization_function": "plot_discrete",
                     "confint_method": {
                         "statistic_value": "t_ci",
                         "difference": "welch_ci"
