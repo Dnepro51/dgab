@@ -4,6 +4,16 @@ def format_number(value):
         return f"{float(value):.4f}"
     return str(value)
 
+
+def get_statistic_russian(statistic):
+    """Get Russian name for statistic."""
+    statistic_ru = {
+        'mean': 'среднее',
+        'median': 'медиана',
+        'proportion': 'доля'
+    }
+    return statistic_ru.get(statistic, statistic)
+
 def format_ci(ci_list):
     """Clean formatting for confidence intervals."""
     if isinstance(ci_list, list) and len(ci_list) == 2:
@@ -68,27 +78,9 @@ def build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, s
     return comprehensive_results
 
 
-def generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level):
-    """Generate HTML report summary for A/B test results."""
-    confidence_level = int((1 - significance_level) * 100)
-    
-    group_stats_sorted = group_stats_df.sort_values(statistic, ascending=False).copy()
-    best_group = group_stats_sorted.iloc[0]
-    
-    top_2_groups = group_stats_sorted.head(2)
-    comparison = None
-    if len(top_2_groups) > 1 and not comprehensive_results.empty:
-        comp_filter = (
-            ((comprehensive_results['group1'] == top_2_groups.iloc[1]['group']) &
-             (comprehensive_results['group2'] == top_2_groups.iloc[0]['group'])) |
-            ((comprehensive_results['group1'] == top_2_groups.iloc[0]['group']) &
-             (comprehensive_results['group2'] == top_2_groups.iloc[1]['group']))
-        )
-        comp_matches = comprehensive_results[comp_filter]
-        if not comp_matches.empty:
-            comparison = comp_matches.iloc[0]
-    
-    confluence_css = """
+def generate_confluence_css():
+    """Generate CSS for professional Confluence-style reports."""
+    return """
     <style>
         .ab-report {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
@@ -143,13 +135,25 @@ def generate_html_report(group_stats_df, comprehensive_results, data_type, stati
         .ab-report .group-name {
             font-weight: 600;
         }
+        .ab-report .significant-yes {
+            color: #00875a;
+            font-weight: 600;
+        }
+        .ab-report .significant-no {
+            color: #de350b;
+            font-weight: 600;
+        }
     </style>
     """
+
+
+def generate_group_stats_table(group_stats_df, statistic, significance_level):
+    """Generate group statistics table HTML."""
+    confidence_level = int((1 - significance_level) * 100)
+    group_stats_sorted = group_stats_df.sort_values(statistic, ascending=False).copy()
+    ci_col = f'ci_{confidence_level}'
     
-    html = confluence_css + f"""
-    <div class="ab-report">
-        <h3>📊 A/B тест</h3>
-        
+    html = f"""
         <h4>Группы теста:</h4>
         <table>
             <tr>
@@ -160,7 +164,6 @@ def generate_html_report(group_stats_df, comprehensive_results, data_type, stati
             </tr>
     """
     
-    ci_col = f'ci_{confidence_level}'
     for _, row in group_stats_sorted.iterrows():
         html += f"""
             <tr>
@@ -171,10 +174,27 @@ def generate_html_report(group_stats_df, comprehensive_results, data_type, stati
             </tr>
         """
     
-    html += f"""
-        </table>
+    html += "</table>"
+    return html, group_stats_sorted
+
+
+def generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result=None, fig=None):
+    """Generate HTML report for 2-group A/B test."""
+    confidence_level = int((1 - significance_level) * 100)
+    
+    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level)
+    best_group = group_stats_sorted.iloc[0]
+    
+    comparison = comprehensive_results.iloc[0] if not comprehensive_results.empty else None
+    
+    html = generate_confluence_css() + f"""
+    <div class="ab-report">
+        <h3>📊 A/B тест (2 группы)</h3>
+        
+        {group_stats_table}
         
         <h4>Результаты теста:</h4>
+        <p><strong>Исследуемая статистика:</strong> {get_statistic_russian(statistic)}</p>
         <p><strong>Лучшая группа:</strong> {best_group['group']} ({format_number(best_group[statistic])})</p>
     """
     
@@ -188,3 +208,79 @@ def generate_html_report(group_stats_df, comprehensive_results, data_type, stati
     
     html += "</div>"
     return html
+
+
+def generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result=None, fig=None):
+    """Generate HTML report for multi-group A/B test."""
+    confidence_level = int((1 - significance_level) * 100)
+    
+    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level)
+    best_group = group_stats_sorted.iloc[0]
+    
+    html = generate_confluence_css() + f"""
+    <div class="ab-report">
+        <h3>📊 A/B тест (множественные группы)</h3>
+        
+        {group_stats_table}
+        
+        <h4>Результаты теста:</h4>
+        <p><strong>Исследуемая статистика:</strong> {get_statistic_russian(statistic)}</p>
+        <p><strong>Лучшая группа:</strong> {best_group['group']} ({format_number(best_group[statistic])})</p>
+    """
+    
+    if omnibus_result:
+        html += f"""
+        <p><strong>Общие различия значимы:</strong> {'Да' if omnibus_result['significant'] else 'Нет'}</p>
+        """
+    
+    html += f"""
+        
+        <h4>🔍 Попарные сравнения:</h4>
+        <table>
+            <tr>
+                <th>Сравнение</th>
+                <th class="number">{get_statistic_russian(statistic).capitalize()} левой группы</th>
+                <th class="number">{get_statistic_russian(statistic).capitalize()} правой группы</th>
+                <th class="center">Значимо</th>
+                <th class="number">Размер эффекта</th>
+                <th class="center">Доверительный интервал эффекта</th>
+            </tr>
+    """
+    
+    for _, row in comprehensive_results.iterrows():
+        significant_class = "significant-yes" if row['significant'] else "significant-no"
+        significant_text = "✅ Да" if row['significant'] else "❌ Нет"
+        effect_ci_col = f'abs_difference_ci_{confidence_level}'
+        
+        group1_stat = row[f'group1_{statistic}']
+        group2_stat = row[f'group2_{statistic}']
+        if group1_stat > group2_stat:
+            comparison_text = f"{row['group1']}>{row['group2']}"
+            left_stat = group1_stat
+            right_stat = group2_stat
+        else:
+            comparison_text = f"{row['group2']}>{row['group1']}"
+            left_stat = group2_stat
+            right_stat = group1_stat
+        
+        html += f"""
+            <tr>
+                <td class="group-name">{comparison_text}</td>
+                <td class="number">{format_number(left_stat)}</td>
+                <td class="number">{format_number(right_stat)}</td>
+                <td class="center {significant_class}">{significant_text}</td>
+                <td class="number">{format_number(row['abs_difference'])}</td>
+                <td class="center">{format_ci(row[effect_ci_col])}</td>
+            </tr>
+        """
+    
+    html += "</table></div>"
+    return html
+
+
+def generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=None, fig=None):
+    """Generate HTML report - routes to 2-group or multi-group version."""
+    if unique_grps_cnt == 2:
+        return generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result, fig)
+    else:
+        return generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result, fig)

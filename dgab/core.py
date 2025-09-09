@@ -133,10 +133,12 @@ def run_statistical_test(
     
     groups = sorted(dataframe[group_col].unique())
     
+    omnibus_result = None
     omnibus_test = test_config['omnibus_test']
     if omnibus_test:
         omnibus_func = globals()[f"{omnibus_test}_test"]
         omnibus_result = omnibus_func(dataframe, group_col, metric_col, significance_level)
+        omnibus_result['test_name'] = omnibus_test
         
         print(f"Общий тест: {omnibus_test}")
         print(f"Статистика: {omnibus_result['statistic']:.4f}")
@@ -177,7 +179,7 @@ def run_statistical_test(
     display(comprehensive_results)
     print()
     
-    return group_stats_df, comprehensive_results
+    return group_stats_df, comprehensive_results, omnibus_result
 
 
 # Функция запуска анализа
@@ -252,9 +254,9 @@ def analyze(
     
     fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
     
-    group_stats_df, comprehensive_results = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
+    group_stats_df, comprehensive_results, omnibus_result = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
     
-    html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level)
+    html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=omnibus_result)
     display(HTML(html_report))
     
     return {
