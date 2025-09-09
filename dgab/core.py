@@ -9,6 +9,7 @@ from .utils.confints import confint_group_statistic, confint_difference
 from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
 from .utils.visualizations import plot_discrete
 from .utils.reports import generate_html_report, build_comprehensive_table
+from .utils.validations import validate_inputs
 
 
 # Утилиты для определения конфигурации теста
@@ -247,8 +248,11 @@ def analyze(
         metric_col, 
         statistic='mean', 
         dependency='independent',
-        significance_level=0.01
+        significance_level=0.01,
+        metric_config=None
     ):
+    validate_inputs(dataframe, data_type, group_col, metric_col, statistic, dependency, significance_level, metric_config)
+    
     unique_grps_cnt = count_groups(dataframe, group_col)
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     
