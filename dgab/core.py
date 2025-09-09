@@ -8,7 +8,7 @@ from IPython.display import HTML
 from .utils.confints import confint_group_statistic, confint_difference
 from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
 from .utils.visualizations import plot_discrete
-from .utils.reports import generate_html_report
+from .utils.reports import generate_html_report, build_comprehensive_table
 
 
 # Утилиты для определения конфигурации теста
@@ -170,48 +170,7 @@ def run_statistical_test(
     display(pairwise_df)
     print()
     
-    results = []
-    for i, row in pairwise_df.iterrows():
-        group1, group2 = row['group1'], row['group2']
-        
-        group1_stats = group_stats_df[group_stats_df['group'] == group1].iloc[0]
-        group2_stats = group_stats_df[group_stats_df['group'] == group2].iloc[0]
-        diff_row = diff_df[(diff_df['group1'] == group1) & (diff_df['group2'] == group2)]
-        
-        if len(diff_row) == 0:
-            diff_row = diff_df[(diff_df['group1'] == group2) & (diff_df['group2'] == group1)]
-            difference = -diff_row.iloc[0]['difference'] if len(diff_row) > 0 else 0
-        else:
-            difference = diff_row.iloc[0]['difference']
-        
-        abs_difference = abs(difference)
-        comparison_result = f"{group1}>{group2}" if group1_stats[statistic] > group2_stats[statistic] else f"{group2}>{group1}"
-        
-        confidence_level_int = int((1 - significance_level) * 100)
-        ci_col = f'ci_{confidence_level_int}'
-        diff_ci = diff_row.iloc[0][ci_col] if len(diff_row) > 0 else [0, 0]
-        abs_diff_ci = [abs(diff_ci[0]), abs(diff_ci[1])]
-        abs_diff_ci.sort()
-        
-        results.append({
-            'group1': group1,
-            'group1_count': group1_stats['count'],
-            f'group1_{statistic}': np.around(group1_stats[statistic], 4),
-            f'group1_{ci_col}': group1_stats[ci_col],
-            'group2': group2,
-            'group2_count': group2_stats['count'],
-            f'group2_{statistic}': np.around(group2_stats[statistic], 4),
-            f'group2_{ci_col}': group2_stats[ci_col],
-            'abs_difference': np.around(abs_difference, 4),
-            f'abs_difference_{ci_col}': [np.around(abs_diff_ci[0], 4), np.around(abs_diff_ci[1], 4)],
-            'comparison_result': comparison_result,
-            'pvalue': row.get('pvalue', 0),
-            'corrected_pvalue': row.get('corrected_pvalue', None),
-            'significant': row.get('significant', False)
-        })
-    
-    comprehensive_results = pd.DataFrame(results)
-    comprehensive_results = comprehensive_results.sort_values(['significant', f'group1_{statistic}', 'abs_difference'], ascending=[False, False, True])
+    comprehensive_results = build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, significance_level)
     
     print("Сводная таблица результатов:")
     print(f"Сортировка: significant desc, group1_{statistic} desc, abs_difference asc")
