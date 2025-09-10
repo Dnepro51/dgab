@@ -51,7 +51,7 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
     print(f"Тип данных: {data_type_ru.get(data_type, data_type)}")
     print(f"Статистика: {statistic}")
     print(f"Групп: {unique_grps_cnt}")
-    print(f"Значимость: {significance_level}")
+    print(f"Уровень значимости: {significance_level}")
     print(f"Доверительная вероятность: {confidence_level}")
     print(f"Зависимость выборок: {dependency_ru.get(dependency, dependency)}")
     print(f"Колонка с идентификатором групп: {group_col}")
@@ -262,11 +262,3 @@ def analyze(
     
     html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=omnibus_result)
     display(HTML(html_report))
-    
-    
-    # return {
-    #     'unique_grps_cnt': unique_grps_cnt,
-    #     'test_config': test_config,
-    #     'visualization': fig,
-    #     'html_report': html_report
-    # }
