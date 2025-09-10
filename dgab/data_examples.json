@@ -1,0 +1,79 @@
+{
+  "discrete": {
+    "description": "Дискретные данные - подсчеты событий для каждого пользователя",
+    "sample_data": [
+      {"group": "A", "launches": 2},
+      {"group": "A", "launches": 0}, 
+      {"group": "A", "launches": 1},
+      {"group": "A", "launches": 3},
+      {"group": "A", "launches": 0},
+      {"group": "B", "launches": 1},
+      {"group": "B", "launches": 2},
+      {"group": "B", "launches": 0},
+      {"group": "B", "launches": 4},
+      {"group": "B", "launches": 1}
+    ],
+    "field_descriptions": {
+      "group": "Идентификатор группы (обязательно) - строковые значения типа 'A', 'B', 'контроль', 'тест'",
+      "launches": "Метрика подсчетов (обязательно) - числа, например количество событий на пользователя"
+    },
+    "parameters": {
+      "dataframe": {
+        "type": "pandas.DataFrame", 
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "DataFrame с данными эксперимента"
+      },
+      "data_type": {
+        "type": "str",
+        "required": true,
+        "default": null,
+        "available_values": ["discrete"],
+        "description": "Тип данных для анализа"
+      },
+      "group_col": {
+        "type": "str", 
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "Название колонки с идентификаторами групп"
+      },
+      "metric_col": {
+        "type": "str",
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "Название колонки с анализируемой метрикой"
+      },
+      "statistic": {
+        "type": "str",
+        "required": false,
+        "default": "mean",
+        "available_values": ["mean"],
+        "description": "Статистика для анализа"
+      },
+      "dependency": {
+        "type": "str",
+        "required": false,
+        "default": "independent", 
+        "available_values": ["independent"],
+        "description": "Зависимость выборок"
+      },
+      "significance_level": {
+        "type": "float",
+        "required": false,
+        "default": 0.01,
+        "available_values": null,
+        "description": "Уровень значимости (альфа)"
+      }
+    },
+    "example_call": {
+      "dataframe": "df",
+      "data_type": "discrete",
+      "group_col": "group",
+      "metric_col": "launches",
+      "significance_level": 0.01
+    }
+  }
+}
