@@ -263,9 +263,10 @@ def analyze(
     html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=omnibus_result)
     display(HTML(html_report))
     
-    return {
-        'unique_grps_cnt': unique_grps_cnt,
-        'test_config': test_config,
-        'visualization': fig,
-        'html_report': html_report
-    }
+    
+    # return {
+    #     'unique_grps_cnt': unique_grps_cnt,
+    #     'test_config': test_config,
+    #     'visualization': fig,
+    #     'html_report': html_report
+    # }
