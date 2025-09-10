@@ -6,3 +6,4 @@ examples/welch_t_test_discrete_data.py
 examples/z_prop_test.py
 plan.md
 *pycache*
+library_architecture.md
