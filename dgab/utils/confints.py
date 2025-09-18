@@ -101,7 +101,7 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
                 group1_data = dataframe[dataframe[group_col] == group1][metric_col]
                 group2_data = dataframe[dataframe[group_col] == group2][metric_col]
                 
-                if statistic == 'mean':
+                if statistic == 'mean' or statistic == 'proportion':
                     difference = group2_data.mean() - group1_data.mean()
                 
                 ci_lower, ci_upper = method_func(group1_data, group2_data,
