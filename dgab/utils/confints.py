@@ -4,12 +4,11 @@ from scipy import stats
 import statsmodels.stats.api as sms
 
 
-def t_ci(data, significance_level=0.01, **kwargs):
+def t_ci(data, significance_level=0.01, confidence_level=0.99, **kwargs):
     """T-distribution confidence interval for mean.
-    
+
     https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.t.html
     """
-    confidence_level = 1 - significance_level
     mean = np.mean(data)
     sem = stats.sem(data)
     df = len(data) - 1
@@ -17,25 +16,26 @@ def t_ci(data, significance_level=0.01, **kwargs):
     return ci[0], ci[1]
 
 
-def welch_ci(group1_data, group2_data, significance_level=0.01, **kwargs):
+def welch_ci(group1_data, group2_data, significance_level=0.01, confidence_level=0.99, **kwargs):
     """Welch's confidence interval for difference of means (unequal variances).
-    
+
     https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.html
     https://www.statsmodels.org/dev/generated/statsmodels.stats.weightstats.CompareMeans.tconfint_diff.html#statsmodels.stats.weightstats.CompareMeans.tconfint_diff
     """
     cm = sms.CompareMeans(sms.DescrStatsW(group1_data), sms.DescrStatsW(group2_data))
-    ci = cm.tconfint_diff(alpha=significance_level, usevar='unequal')
+    alpha = 1 - confidence_level
+    ci = cm.tconfint_diff(alpha=alpha, usevar='unequal')
     return ci[0], ci[1]
 
 
-def confint_group_statistic(dataframe, group_col, metric_col, data_type, statistic, 
-                           confint_method, confint_params, significance_level=0.01):
+def confint_group_statistic(dataframe, group_col, metric_col, data_type, statistic,
+                           confint_method, confint_params, significance_level=0.01, confidence_level=0.99):
     """Calculate confidence intervals for group statistics."""
     method_func = globals()[confint_method]
     results = []
-    
-    confidence_level = int((1 - significance_level) * 100)
-    ci_column_name = f'ci_{confidence_level}'
+
+    confidence_level_int = int(confidence_level * 100)
+    ci_column_name = f'ci_{confidence_level_int}'
     
     for group in dataframe[group_col].unique():
         group_data = dataframe[dataframe[group_col] == group][metric_col]
@@ -43,7 +43,7 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
         if statistic == 'mean':
             stat_value = group_data.mean()
         
-        ci_lower, ci_upper = method_func(group_data, significance_level=significance_level, **confint_params)
+        ci_lower, ci_upper = method_func(group_data, significance_level=significance_level, confidence_level=confidence_level, **confint_params)
         
         results.append({
             'group': group,
@@ -56,14 +56,14 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
 
 
 def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
-                      confint_method, confint_params, significance_level=0.01):
+                      confint_method, confint_params, significance_level=0.01, confidence_level=0.99):
     """Calculate confidence intervals for differences between groups."""
     method_func = globals()[confint_method]
     groups = sorted(dataframe[group_col].unique())
     results = []
-    
-    confidence_level = int((1 - significance_level) * 100)
-    ci_column_name = f'ci_{confidence_level}'
+
+    confidence_level_int = int(confidence_level * 100)
+    ci_column_name = f'ci_{confidence_level_int}'
     
     if len(groups) == 2:
         group1, group2 = groups
@@ -73,8 +73,9 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
         if statistic == 'mean':
             difference = group2_data.mean() - group1_data.mean()
         
-        ci_lower, ci_upper = method_func(group1_data, group2_data, 
-                                       significance_level=significance_level, 
+        ci_lower, ci_upper = method_func(group1_data, group2_data,
+                                       significance_level=significance_level,
+                                       confidence_level=confidence_level,
                                        **confint_params)
         
         results.append({

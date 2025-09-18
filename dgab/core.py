@@ -33,7 +33,7 @@ def get_test_config(data_type, unique_grps_cnt, statistic, dependency):
 # EDA-функции
 
 ## EDA-1 Отображение информации о конфигурации теста
-def display_test_info(data_type, unique_grps_cnt, test_config, significance_level, dataframe, group_col, metric_col, statistic, dependency):
+def display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency):
     data_type_ru = {'discrete': 'дискретные', 'binary_agg': 'бинарные', 'continuous': 'непрерывные'}
     test_name_ru = {'welch_ttest': 'T-тест Уэлча', 'anova': 'ANOVA', 'chi2': 'Хи-квадрат'}
     correction_ru = {'bonferroni': 'Бонферрони', None: 'нет'}
@@ -46,7 +46,6 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
         None: 'нет'
     }
     
-    confidence_level = 1 - significance_level
     
     print(f"Тип данных: {data_type_ru.get(data_type, data_type)}")
     print(f"Статистика: {statistic}")
@@ -80,17 +79,18 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
 
 
 def run_eda_analysis(
-        dataframe, 
-        test_config, 
-        group_col, 
-        metric_col, 
-        unique_grps_cnt, 
+        dataframe,
+        test_config,
+        group_col,
+        metric_col,
+        unique_grps_cnt,
         significance_level,
+        confidence_level,
         data_type,
         statistic,
         dependency
     ):
-    display_test_info(data_type, unique_grps_cnt, test_config, significance_level, dataframe, group_col, metric_col, statistic, dependency)
+    display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency)
     print()
     
     confint_method = test_config['confint_method']['statistic_value']
@@ -98,7 +98,7 @@ def run_eda_analysis(
     
     group_stats_df = confint_group_statistic(
         dataframe, group_col, metric_col, data_type, statistic,
-        confint_method, confint_params, significance_level
+        confint_method, confint_params, significance_level, confidence_level
     )
     group_stats_df = group_stats_df.sort_values(statistic, ascending=False)
     
@@ -119,12 +119,13 @@ def run_eda_analysis(
 # Стат-тест функции
 
 def run_statistical_test(
-        dataframe, 
-        test_config, 
-        group_col, 
-        metric_col, 
-        unique_grps_cnt, 
+        dataframe,
+        test_config,
+        group_col,
+        metric_col,
+        unique_grps_cnt,
         significance_level,
+        confidence_level,
         data_type,
         statistic
     ):
@@ -154,14 +155,14 @@ def run_statistical_test(
         dataframe, group_col, metric_col, data_type, statistic,
         test_config['confint_method']['statistic_value'],
         test_config['confint_params']['statistic_value'],
-        significance_level
+        significance_level, confidence_level
     )
     
     diff_df = confint_difference(
         dataframe, group_col, metric_col, data_type, statistic,
         test_config['confint_method']['difference'],
         test_config['confint_params']['difference'],
-        significance_level
+        significance_level, confidence_level
     )
     
     pairwise_df = pairwise_tests_with_correction(
@@ -173,7 +174,7 @@ def run_statistical_test(
     display(pairwise_df)
     print()
     
-    comprehensive_results = build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, significance_level)
+    comprehensive_results = build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, significance_level, confidence_level)
     
     print("Сводная таблица результатов:")
     print(f"Сортировка: significant desc, group1_{statistic} desc, abs_difference asc")
@@ -242,13 +243,14 @@ def how(data_type=None):
 
 
 def analyze(
-        dataframe, 
-        data_type, 
-        group_col, 
-        metric_col, 
-        statistic='mean', 
+        dataframe,
+        data_type,
+        group_col,
+        metric_col,
+        statistic='mean',
         dependency='independent',
         significance_level=0.01,
+        confidence_level=0.99,
         metric_config=None
     ):
     validate_inputs(dataframe, data_type, group_col, metric_col, statistic, dependency, significance_level, metric_config)
@@ -256,9 +258,9 @@ def analyze(
     unique_grps_cnt = count_groups(dataframe, group_col)
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     
-    fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic, dependency)
+    fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, confidence_level, data_type, statistic, dependency)
     
-    group_stats_df, comprehensive_results, omnibus_result = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, data_type, statistic)
+    group_stats_df, comprehensive_results, omnibus_result = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, confidence_level, data_type, statistic)
     
-    html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=omnibus_result)
+    html_report = generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level, unique_grps_cnt, omnibus_result=omnibus_result)
     display(HTML(html_report))

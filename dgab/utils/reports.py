@@ -26,13 +26,13 @@ def format_count(count):
     """Format sample size with comma separators."""
     return f"{int(count):,}"
 
-def build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, significance_level):
+def build_comprehensive_table(group_stats_df, diff_df, pairwise_df, statistic, significance_level, confidence_level=0.99):
     """Build comprehensive results table universal for all data types."""
     import pandas as pd
     import numpy as np
-    
+
     results = []
-    confidence_level_int = int((1 - significance_level) * 100)
+    confidence_level_int = int(confidence_level * 100)
     ci_col = f'ci_{confidence_level_int}'
     
     for i, row in pairwise_df.iterrows():
@@ -147,11 +147,11 @@ def generate_confluence_css():
     """
 
 
-def generate_group_stats_table(group_stats_df, statistic, significance_level):
+def generate_group_stats_table(group_stats_df, statistic, significance_level, confidence_level=0.99):
     """Generate group statistics table HTML."""
-    confidence_level = int((1 - significance_level) * 100)
+    confidence_level_int = int(confidence_level * 100)
     group_stats_sorted = group_stats_df.sort_values(statistic, ascending=False).copy()
-    ci_col = f'ci_{confidence_level}'
+    ci_col = f'ci_{confidence_level_int}'
     
     html = f"""
         <h4>Группы теста:</h4>
@@ -159,7 +159,7 @@ def generate_group_stats_table(group_stats_df, statistic, significance_level):
             <tr>
                 <th>Группа</th>
                 <th class="number">Размер выборки</th>
-                <th class="center">{statistic.title()} (CI {confidence_level}%)</th>
+                <th class="center">{statistic.title()} (CI {confidence_level_int}%)</th>
                 <th class="number">{statistic.title()}</th>
             </tr>
     """
@@ -178,11 +178,11 @@ def generate_group_stats_table(group_stats_df, statistic, significance_level):
     return html, group_stats_sorted
 
 
-def generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result=None, fig=None):
+def generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level=0.99, omnibus_result=None, fig=None):
     """Generate HTML report for 2-group A/B test."""
-    confidence_level = int((1 - significance_level) * 100)
-    
-    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level)
+    confidence_level_int = int(confidence_level * 100)
+
+    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level, confidence_level)
     best_group = group_stats_sorted.iloc[0]
     
     comparison = comprehensive_results.iloc[0] if not comprehensive_results.empty else None
@@ -199,7 +199,7 @@ def generate_2group_report(group_stats_df, comprehensive_results, data_type, sta
     """
     
     if comparison is not None:
-        effect_ci_col = f'abs_difference_ci_{confidence_level}'
+        effect_ci_col = f'abs_difference_ci_{confidence_level_int}'
         html += f"""
         <p><strong>Различия значимы:</strong> {'Да' if comparison['significant'] else 'Нет'}</p>
         <p><strong>Размер эффекта:</strong> {format_number(comparison['abs_difference'])}</p>
@@ -210,11 +210,11 @@ def generate_2group_report(group_stats_df, comprehensive_results, data_type, sta
     return html
 
 
-def generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result=None, fig=None):
+def generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level=0.99, omnibus_result=None, fig=None):
     """Generate HTML report for multi-group A/B test."""
-    confidence_level = int((1 - significance_level) * 100)
-    
-    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level)
+    confidence_level_int = int(confidence_level * 100)
+
+    group_stats_table, group_stats_sorted = generate_group_stats_table(group_stats_df, statistic, significance_level, confidence_level)
     best_group = group_stats_sorted.iloc[0]
     
     html = generate_confluence_css() + f"""
@@ -250,7 +250,7 @@ def generate_multigroup_report(group_stats_df, comprehensive_results, data_type,
     for _, row in comprehensive_results.iterrows():
         significant_class = "significant-yes" if row['significant'] else "significant-no"
         significant_text = "✅ Да" if row['significant'] else "❌ Нет"
-        effect_ci_col = f'abs_difference_ci_{confidence_level}'
+        effect_ci_col = f'abs_difference_ci_{confidence_level_int}'
         
         group1_stat = row[f'group1_{statistic}']
         group2_stat = row[f'group2_{statistic}']
@@ -278,9 +278,9 @@ def generate_multigroup_report(group_stats_df, comprehensive_results, data_type,
     return html
 
 
-def generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, unique_grps_cnt, omnibus_result=None, fig=None):
+def generate_html_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level, unique_grps_cnt, omnibus_result=None, fig=None):
     """Generate HTML report - routes to 2-group or multi-group version."""
     if unique_grps_cnt == 2:
-        return generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result, fig)
+        return generate_2group_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level, omnibus_result, fig)
     else:
-        return generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, omnibus_result, fig)
+        return generate_multigroup_report(group_stats_df, comprehensive_results, data_type, statistic, significance_level, confidence_level, omnibus_result, fig)

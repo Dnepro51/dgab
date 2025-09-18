@@ -66,6 +66,13 @@
         "default": 0.01,
         "available_values": null,
         "description": "Уровень значимости (альфа)"
+      },
+      "confidence_level": {
+        "type": "float",
+        "required": false,
+        "default": 0.99,
+        "available_values": null,
+        "description": "Доверительная вероятность для интервалов (независима от significance_level)"
       }
     },
     "example_call": {
@@ -73,7 +80,8 @@
       "data_type": "discrete",
       "group_col": "group",
       "metric_col": "launches",
-      "significance_level": 0.01
+      "significance_level": 0.01,
+      "confidence_level": 0.99
     }
   }
 }
