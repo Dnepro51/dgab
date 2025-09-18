@@ -51,7 +51,7 @@
     },
     "binary_agg": {
         "2": {
-            "mean": {
+            "proportion": {
                 "independent": {
                     "test_name": "welch_ttest",
                     "omnibus_test": null,
@@ -75,7 +75,7 @@
             }
         },
         "multiple": {
-            "mean": {
+            "proportion": {
                 "independent": {
                     "test_name": "welch_ttest",
                     "omnibus_test": "chi2",

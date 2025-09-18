@@ -36,22 +36,31 @@ def confint_group_statistic(dataframe, group_col, metric_col, data_type, statist
 
     confidence_level_int = int(confidence_level * 100)
     ci_column_name = f'ci_{confidence_level_int}'
-    
+
     for group in dataframe[group_col].unique():
         group_data = dataframe[dataframe[group_col] == group][metric_col]
-        
-        if statistic == 'mean':
+
+        if statistic == 'mean' or statistic == 'proportion':
             stat_value = group_data.mean()
-        
+
         ci_lower, ci_upper = method_func(group_data, significance_level=significance_level, confidence_level=confidence_level, **confint_params)
-        
-        results.append({
+
+        result = {
             'group': group,
             'count': len(group_data),
             statistic: stat_value,
             ci_column_name: [np.around(ci_lower, 4), np.around(ci_upper, 4)]
-        })
-    
+        }
+
+        # For binary_agg, add trials and successes columns
+        if data_type == 'binary_agg':
+            trials = len(group_data)
+            successes = int(sum(group_data))
+            result['trials'] = trials
+            result['successes'] = successes
+
+        results.append(result)
+
     return pd.DataFrame(results)
 
 
@@ -70,7 +79,7 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
         group1_data = dataframe[dataframe[group_col] == group1][metric_col]
         group2_data = dataframe[dataframe[group_col] == group2][metric_col]
         
-        if statistic == 'mean':
+        if statistic == 'mean' or statistic == 'proportion':
             difference = group2_data.mean() - group1_data.mean()
         
         ci_lower, ci_upper = method_func(group1_data, group2_data,
