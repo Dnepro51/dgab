@@ -216,12 +216,12 @@ def how(data_type=None):
     display(sample_df)
     print()
     
-    print("Описание полей:")
+    print("Описание полей тестовых данных:")
     for field, desc in example_data['field_descriptions'].items():
         print(f"- {field}: {desc}")
     print()
     
-    print("Параметры функции analyze():")
+    print(f"Параметры функции analyze(data_type='{data_type}'):")
     for param, info in example_data['parameters'].items():
         required_text = "обязательно" if info['required'] else "опционально"
         default_text = f", по умолчанию: {info['default']}" if info['default'] is not None else ""
