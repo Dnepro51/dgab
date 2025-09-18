@@ -57,6 +57,7 @@
                     "omnibus_test": null,
                     "multiple_comparison_correction": null,
                     "custom_config_required": true,
+                    "visualization_function": "plot_binary_agg",
                     "confint_method": {
                         "statistic_value": "wilson_ci",
                         "difference": "newcombe_wilson_ci"
@@ -80,6 +81,7 @@
                     "omnibus_test": "chi2",
                     "multiple_comparison_correction": "bonferroni",
                     "custom_config_required": true,
+                    "visualization_function": "plot_binary_agg",
                     "confint_method": {
                         "statistic_value": "wilson_ci",
                         "difference": "newcombe_wilson_ci"

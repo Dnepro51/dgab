@@ -6,10 +6,11 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from IPython.display import HTML
 from .utils.confints import confint_group_statistic, confint_difference
-from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
-from .utils.visualizations import plot_discrete
+from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction, chi2_test
+from .utils.visualizations import plot_discrete, plot_binary_agg
 from .utils.reports import generate_html_report, build_comprehensive_table
 from .utils.validations import validate_inputs
+from .utils.transformations import aggregate_to_individual_binary
 
 
 # Утилиты для определения конфигурации теста
@@ -254,7 +255,12 @@ def analyze(
         metric_config=None
     ):
     validate_inputs(dataframe, data_type, group_col, metric_col, statistic, dependency, significance_level, metric_config)
-    
+
+    # Transform binary aggregated data to individual observations
+    if data_type == 'binary_agg':
+        dataframe = aggregate_to_individual_binary(dataframe, group_col, metric_config)
+        metric_col = 'binary_outcome'  # Update metric column to transformed data
+
     unique_grps_cnt = count_groups(dataframe, group_col)
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     

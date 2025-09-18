@@ -105,5 +105,36 @@ def confint_difference(dataframe, group_col, metric_col, data_type, statistic,
                     'difference': difference,
                     ci_column_name: [np.around(ci_lower, 4), np.around(ci_upper, 4)]
                 })
-    
+
     return pd.DataFrame(results)
+
+
+def wilson_ci(data, significance_level=0.01, confidence_level=0.99, **kwargs):
+    """Wilson confidence interval for proportions.
+
+    https://www.statsmodels.org/stable/generated/statsmodels.stats.proportion.proportion_confint.html
+    """
+    from statsmodels.stats.proportion import proportion_confint
+
+    successes = sum(data)
+    trials = len(data)
+    alpha = 1 - confidence_level
+
+    ci_lower, ci_upper = proportion_confint(successes, trials, alpha=alpha, method='wilson')
+    return ci_lower, ci_upper
+
+
+def newcombe_wilson_ci(group1_data, group2_data, significance_level=0.01, confidence_level=0.99, **kwargs):
+    """Newcombe-Wilson confidence interval for difference between proportions.
+
+    https://www.statsmodels.org/stable/generated/statsmodels.stats.proportion.confint_proportions_2indep.html
+    """
+    from statsmodels.stats.proportion import confint_proportions_2indep
+
+    count1, nobs1 = sum(group1_data), len(group1_data)
+    count2, nobs2 = sum(group2_data), len(group2_data)
+    alpha = 1 - confidence_level
+
+    ci_lower, ci_upper = confint_proportions_2indep(count1, nobs1, count2, nobs2,
+                                                  method='newcombe', alpha=alpha)
+    return ci_lower, ci_upper

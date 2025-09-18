@@ -16,23 +16,23 @@ def validate_dataframe(dataframe):
         raise ValueError("DataFrame пустой - нет данных для анализа")
 
 
-def validate_required_columns(dataframe, group_col, metric_col, metric_config=None):
+def validate_required_columns(dataframe, group_col, metric_col, data_type, metric_config=None):
     """Validate that required columns exist in DataFrame.
-    
+
     https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.columns.html
     """
     columns = dataframe.columns.tolist()
-    
+
     if group_col not in columns:
         raise ValueError(f"Колонка с группами '{group_col}' не найдена. Доступные колонки: {columns}")
-    
-    if metric_col not in columns:
+
+    if data_type != 'binary_agg' and metric_col not in columns:
         raise ValueError(f"Колонка с метрикой '{metric_col}' не найдена. Доступные колонки: {columns}")
-    
+
     if metric_config:
         if 'trials_col_name' in metric_config and metric_config['trials_col_name'] not in columns:
             raise ValueError(f"Колонка trials '{metric_config['trials_col_name']}' не найдена. Доступные колонки: {columns}")
-        
+
         if 'successes_col_name' in metric_config and metric_config['successes_col_name'] not in columns:
             raise ValueError(f"Колонка successes '{metric_config['successes_col_name']}' не найдена. Доступные колонки: {columns}")
 
@@ -171,9 +171,10 @@ def validate_inputs(
     """
     validate_dataframe(dataframe)
     
-    validate_required_columns(dataframe, group_col, metric_col, metric_config)
+    validate_required_columns(dataframe, group_col, metric_col, data_type, metric_config)
     
-    validate_metric_column_type(dataframe, metric_col, data_type)
+    if data_type != 'binary_agg':
+        validate_metric_column_type(dataframe, metric_col, data_type)
     
     validate_group_column(dataframe, group_col)
     

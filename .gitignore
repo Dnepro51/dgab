@@ -7,3 +7,4 @@ examples/z_prop_test.py
 plan.md
 *pycache*
 library_architecture.md
+binary_agg_implementation_plan.md
