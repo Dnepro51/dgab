@@ -70,3 +70,32 @@ def pairwise_tests_with_correction(dataframe, group_col, metric_col, test_func,
             result['significant'] = result['pvalue'] < significance_level
     
     return pd.DataFrame(results)
+
+
+def chi2_test(dataframe, group_col, metric_col, significance_level=0.01):
+    """Chi-square test of independence for multiple groups (omnibus test).
+
+    Works with transformed individual binary data (0s and 1s) by recreating aggregated counts.
+
+    https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.chi2_contingency.html
+    """
+    from scipy.stats import chi2_contingency
+
+    # Create contingency table from individual binary data: rows=groups, cols=[failures, successes]
+    contingency_table = []
+
+    for group in sorted(dataframe[group_col].unique()):
+        group_data = dataframe[dataframe[group_col] == group][metric_col]
+        successes = int(sum(group_data))  # Count of 1s
+        failures = int(len(group_data) - sum(group_data))  # Count of 0s
+        contingency_table.append([failures, successes])
+
+    chi2_stat, p_value, dof, expected = chi2_contingency(contingency_table)
+
+    significant = p_value < significance_level
+
+    return {
+        'statistic': chi2_stat,
+        'pvalue': p_value,
+        'significant': significant
+    }

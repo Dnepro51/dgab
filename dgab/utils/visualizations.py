@@ -95,3 +95,89 @@ def plot_discrete(dataframe, group_col, metric_col, bins=None):
         )
     
     return fig
+
+
+def plot_binary_agg(dataframe, group_col, metric_col, **kwargs):
+    """
+    Binary aggregated data visualization with stacked bar chart.
+
+    Input: Transformed individual binary data (0/1 values)
+    Process: Reconstruct aggregated format internally
+    Output: Stacked bar chart showing conversion rates by group
+    """
+
+    # Reconstruct aggregated data from transformed individual binary data
+    groups_data = []
+    for group in sorted(dataframe[group_col].unique()):
+        group_data = dataframe[dataframe[group_col] == group][metric_col]
+        total_users = len(group_data)
+        conversions = sum(group_data)  # Sum of 1s = conversions
+        failures = total_users - conversions
+        groups_data.append({
+            'group': group,
+            'users': total_users,
+            'conversions': conversions,
+            'failures': failures
+        })
+
+    # Extract data for visualization
+    groups = [item['group'] for item in groups_data]
+    users = [item['users'] for item in groups_data]
+    conversions = [item['conversions'] for item in groups_data]
+    failures = [item['failures'] for item in groups_data]
+
+    # Calculate proportions
+    conv_proportions = [c / u for c, u in zip(conversions, users)]
+    fail_proportions = [f / u for f, u in zip(failures, users)]
+
+    colors = px.colors.qualitative.Dark24[:len(groups)]
+
+    fig = go.Figure()
+
+    for i, (group, conv, fail, total, conv_prop, fail_prop, color) in enumerate(zip(
+            groups, conversions, failures, users, conv_proportions, fail_proportions, colors)):
+
+        fig.add_trace(go.Bar(
+            x=[group],
+            y=[conv_prop],
+            name=f'Группа {group} - Конверсии',
+            marker_color=color,
+            opacity=0.8,
+            text=f'{conv}<br>({conv_prop:.1%})',
+            textposition='inside',
+            textfont=dict(size=12, color='black', family='Arial Black'),
+            showlegend=False
+        ))
+
+        fig.add_trace(go.Bar(
+            x=[group],
+            y=[fail_prop],
+            name=f'Группа {group} - Не конверсии',
+            marker_color=color,
+            opacity=0.35,
+            text=f'{fail}<br>({fail_prop:.1%})',
+            textposition='inside',
+            textfont=dict(size=12, color='black', family='Arial Black'),
+            showlegend=False
+        ))
+
+    for i, (group, total) in enumerate(zip(groups, users)):
+        fig.add_annotation(
+            x=group,
+            y=1.05,
+            text=f'{total}',
+            showarrow=False,
+            font=dict(size=12, weight='bold', color='black')
+        )
+
+    fig.update_layout(
+        barmode='stack',
+        title='Анализ конверсий по группам',
+        xaxis_title=group_col,
+        yaxis_title='Пропорция пользователей',
+        template='plotly_white'
+    )
+
+    fig.update_yaxes(range=[0, 1.1])
+
+    return fig

@@ -6,10 +6,11 @@ from scipy import stats
 import statsmodels.stats.api as sms
 from IPython.display import HTML
 from .utils.confints import confint_group_statistic, confint_difference
-from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction
-from .utils.visualizations import plot_discrete
+from .utils.stat_tests import welch_ttest, anova_test, pairwise_tests_with_correction, chi2_test
+from .utils.visualizations import plot_discrete, plot_binary_agg
 from .utils.reports import generate_html_report, build_comprehensive_table
 from .utils.validations import validate_inputs
+from .utils.transformations import aggregate_to_individual_binary
 
 
 # Утилиты для определения конфигурации теста
@@ -33,11 +34,12 @@ def get_test_config(data_type, unique_grps_cnt, statistic, dependency):
 # EDA-функции
 
 ## EDA-1 Отображение информации о конфигурации теста
-def display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency):
+def display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency, metric_config=None):
     data_type_ru = {'discrete': 'дискретные', 'binary_agg': 'бинарные', 'continuous': 'непрерывные'}
     test_name_ru = {'welch_ttest': 'T-тест Уэлча', 'anova': 'ANOVA', 'chi2': 'Хи-квадрат'}
     correction_ru = {'bonferroni': 'Бонферрони', None: 'нет'}
     dependency_ru = {'independent': 'независимые', 'dependent': 'зависимые'}
+    statistic_ru = {'mean': 'среднее', 'proportion': 'пропорция'}
     confint_method_ru = {
         't_ci': 'T-распределение',
         'welch_ci': 'Уэлча',
@@ -48,13 +50,18 @@ def display_test_info(data_type, unique_grps_cnt, test_config, significance_leve
     
     
     print(f"Тип данных: {data_type_ru.get(data_type, data_type)}")
-    print(f"Статистика: {statistic}")
+    print(f"Статистика: {statistic_ru.get(statistic, statistic)}")
     print(f"Групп: {unique_grps_cnt}")
     print(f"Уровень значимости: {significance_level}")
     print(f"Доверительная вероятность: {confidence_level}")
     print(f"Зависимость выборок: {dependency_ru.get(dependency, dependency)}")
     print(f"Колонка с идентификатором групп: {group_col}")
-    print(f"Колонка с метрикой: {metric_col}")
+    if data_type == 'binary_agg' and metric_config:
+        trials_col = metric_config['trials_col_name']
+        successes_col = metric_config['successes_col_name']
+        print(f"Метрика: конверсия ({successes_col}/{trials_col})")
+    else:
+        print(f"Колонка с метрикой: {metric_col}")
     
     group_names = sorted(dataframe[group_col].unique())
     print(f"Названия групп: {group_names}")
@@ -88,9 +95,10 @@ def run_eda_analysis(
         confidence_level,
         data_type,
         statistic,
-        dependency
+        dependency,
+        metric_config=None
     ):
-    display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency)
+    display_test_info(data_type, unique_grps_cnt, test_config, significance_level, confidence_level, dataframe, group_col, metric_col, statistic, dependency, metric_config)
     print()
     
     confint_method = test_config['confint_method']['statistic_value']
@@ -101,7 +109,14 @@ def run_eda_analysis(
         confint_method, confint_params, significance_level, confidence_level
     )
     group_stats_df = group_stats_df.sort_values(statistic, ascending=False)
-    
+
+    # Reorder columns for binary_agg to show: group, trials, successes, proportion, ci
+    if data_type == 'binary_agg':
+        confidence_level_int = int(confidence_level * 100)
+        ci_col = f'ci_{confidence_level_int}'
+        column_order = ['group', 'trials', 'successes', statistic, ci_col]
+        group_stats_df = group_stats_df[column_order]
+
     print("Статистика по группам:")
     display(group_stats_df)
     print()
@@ -192,7 +207,7 @@ def how(data_type=None):
     with open(json_path, 'r') as f:
         methods_route = json.load(f)
     
-    implemented_types = ['discrete']
+    implemented_types = ['discrete', 'binary_agg']
     available_types = [dt for dt in methods_route.keys() if dt in implemented_types]
     
     if data_type is None:
@@ -210,7 +225,7 @@ def how(data_type=None):
     print(f"Тип данных: {data_type}")
     print(f"Описание: {example_data['description']}")
     print()
-    print("Пример данных (10 строк):")
+    print("Пример данных:")
     
     sample_df = pd.DataFrame(example_data['sample_data'])
     display(sample_df)
@@ -246,19 +261,28 @@ def analyze(
         dataframe,
         data_type,
         group_col,
-        metric_col,
+        metric_col=None,
         statistic='mean',
         dependency='independent',
         significance_level=0.01,
         confidence_level=0.99,
         metric_config=None
     ):
+    # Set default statistic based on data type BEFORE validation
+    if data_type == 'binary_agg' and statistic == 'mean':
+        statistic = 'proportion'
+
     validate_inputs(dataframe, data_type, group_col, metric_col, statistic, dependency, significance_level, metric_config)
-    
+
+    # Transform binary aggregated data to individual observations
+    if data_type == 'binary_agg':
+        dataframe = aggregate_to_individual_binary(dataframe, group_col, metric_config)
+        metric_col = 'binary_outcome'  # Update metric column to transformed data
+
     unique_grps_cnt = count_groups(dataframe, group_col)
     test_config = get_test_config(data_type, unique_grps_cnt, statistic, dependency)
     
-    fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, confidence_level, data_type, statistic, dependency)
+    fig = run_eda_analysis(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, confidence_level, data_type, statistic, dependency, metric_config)
     
     group_stats_df, comprehensive_results, omnibus_result = run_statistical_test(dataframe, test_config, group_col, metric_col, unique_grps_cnt, significance_level, confidence_level, data_type, statistic)
     

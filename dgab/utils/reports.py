@@ -10,7 +10,7 @@ def get_statistic_russian(statistic):
     statistic_ru = {
         'mean': 'среднее',
         'median': 'медиана',
-        'proportion': 'доля'
+        'proportion': 'пропорция'
     }
     return statistic_ru.get(statistic, statistic)
 
