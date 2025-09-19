@@ -167,7 +167,7 @@ def plot_binary_agg(dataframe, group_col, metric_col, **kwargs):
             y=1.05,
             text=f'{total}',
             showarrow=False,
-            font=dict(size=12, weight='bold', color='black')
+            font=dict(size=12, color='black')
         )
 
     fig.update_layout(
