@@ -29,7 +29,7 @@
         "type": "str",
         "required": true,
         "default": null,
-        "available_values": ["discrete"],
+        "available_values": ["discrete", "binary_agg"],
         "description": "Тип данных для анализа"
       },
       "group_col": {
@@ -80,6 +80,88 @@
       "data_type": "discrete",
       "group_col": "group",
       "metric_col": "launches",
+      "significance_level": 0.01,
+      "confidence_level": 0.99
+    }
+  },
+  "binary_agg": {
+    "description": "Бинарные агрегированные данные - подсчеты конверсий по группам в формате количество_попыток/количество_успехов",
+    "sample_data": [
+      {"group": "A", "users": 1200, "conversions": 120},
+      {"group": "B", "users": 1100, "conversions": 143},
+      {"group": "C", "users": 800, "conversions": 96}
+    ],
+    "field_descriptions": {
+      "group": "Идентификатор группы (обязательно) - строковые значения типа 'A', 'B', 'контроль', 'тест'",
+      "users": "Количество попыток/испытаний (обязательно) - общее количество пользователей или событий",
+      "conversions": "Количество успехов/конверсий (обязательно) - количество успешных событий, должно быть ≤ users"
+    },
+    "parameters": {
+      "dataframe": {
+        "type": "pandas.DataFrame",
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "DataFrame с агрегированными данными эксперимента"
+      },
+      "data_type": {
+        "type": "str",
+        "required": true,
+        "default": null,
+        "available_values": ["discrete", "binary_agg"],
+        "description": "Тип данных для анализа"
+      },
+      "group_col": {
+        "type": "str",
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "Название колонки с идентификаторами групп"
+      },
+      "metric_config": {
+        "type": "dict",
+        "required": true,
+        "default": null,
+        "available_values": null,
+        "description": "Конфигурация метрики с ключами 'trials_col_name' (колонка с попытками) и 'successes_col_name' (колонка с успехами). Пример: {'trials_col_name': 'users', 'successes_col_name': 'conversions'}"
+      },
+      "statistic": {
+        "type": "str",
+        "required": false,
+        "default": "proportion",
+        "available_values": ["proportion"],
+        "description": "Статистика для анализа (автоматически устанавливается в 'proportion' для binary_agg)"
+      },
+      "dependency": {
+        "type": "str",
+        "required": false,
+        "default": "independent",
+        "available_values": ["independent"],
+        "description": "Зависимость выборок"
+      },
+      "significance_level": {
+        "type": "float",
+        "required": false,
+        "default": 0.01,
+        "available_values": null,
+        "description": "Уровень значимости (альфа)"
+      },
+      "confidence_level": {
+        "type": "float",
+        "required": false,
+        "default": 0.99,
+        "available_values": null,
+        "description": "Доверительная вероятность для интервалов (независима от significance_level)"
+      }
+    },
+    "example_call": {
+      "dataframe": "df",
+      "data_type": "binary_agg",
+      "group_col": "group",
+      "metric_config": {
+        "trials_col_name": "users",
+        "successes_col_name": "conversions"
+      },
       "significance_level": 0.01,
       "confidence_level": 0.99
     }

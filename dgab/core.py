@@ -207,7 +207,7 @@ def how(data_type=None):
     with open(json_path, 'r') as f:
         methods_route = json.load(f)
     
-    implemented_types = ['discrete']
+    implemented_types = ['discrete', 'binary_agg']
     available_types = [dt for dt in methods_route.keys() if dt in implemented_types]
     
     if data_type is None:
@@ -225,7 +225,7 @@ def how(data_type=None):
     print(f"Тип данных: {data_type}")
     print(f"Описание: {example_data['description']}")
     print()
-    print("Пример данных (10 строк):")
+    print("Пример данных:")
     
     sample_df = pd.DataFrame(example_data['sample_data'])
     display(sample_df)
